@@ -17,6 +17,7 @@ RUN_IN_JUPYTER = False
 #OSTYPE = 'win'
 OSTYPE = 'lin'
 
+#identify the user and the computer which run the scan
 SCANNER_ID = 'my name and my computer'
 
 # if true, a trace route is performed towards the AS listed in ASN_LIST_FILENAME
@@ -245,6 +246,8 @@ if not RUN_IN_JUPYTER:
     parser.add_argument('-a', '--asnscan', dest='asn_scan', action='store_true', default=ASN_SCAN, help='a trace route is performed towards the AS listed in ASN_LIST_FILENAME')
     parser.add_argument('-s', '--skip', type=int, dest='skip', default=SKIP, help='in asnscan mode, start from SKIP in the asn list')
     parser.add_argument('-w', '--writefile', dest='write_to_file', action='store_true', default=WRITE_TO_FILE, help='write (append) to file')
+    parser.add_argument('-u', '--userid', dest='scanner_id', default=SCANNER_ID, help='identify the user and the computer which run the scan')
+
 
 
     args = parser.parse_args()
@@ -257,6 +260,7 @@ if not RUN_IN_JUPYTER:
     ASN_SCAN=args.asn_scan
     SKIP=args.skip
     WRITE_TO_FILE=args.write_to_file
+    SCANNER_ID=args.scanner_id
 
 #initialization phase
 
