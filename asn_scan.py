@@ -22,6 +22,9 @@ SCANNER_ID = 'my name and my computer'
 # if true, a trace route is performed towards the AS listed in ASN_LIST_FILENAME
 ASN_SCAN = False
 
+# if ASN_SCAN is true, skip a number of initial AS in the list and then start scanning
+SKIP = 0
+
 # destination node for traceroute, it can be also changed with option -d
 DEST = 'www.uniroma2.it'
 DEST = 'www.baidu.com'
@@ -246,6 +249,8 @@ if not RUN_IN_JUPYTER:
     parser.add_argument('-r', '--readfile', dest='read_from_file', action='store_true', default=READFROMFILE, help='read from file')
     parser.add_argument('-n', '--filename', dest='file_name', default=FILENAME)
     parser.add_argument('-a', '--asnscan', dest='asn_scan', action='store_true', default=ASN_SCAN)
+    parser.add_argument('-s', '--skip', type=int, dest='skip', default=SKIP)
+
 
     args = parser.parse_args()
     #print ('destination',args.destination)
@@ -255,10 +260,14 @@ if not RUN_IN_JUPYTER:
     READFROMFILE=args.read_from_file
     FILENAME=args.file_name
     ASN_SCAN=args.asn_scan
+    SKIP=args.skip
 
 asndb = pyasn.pyasn('ipasn.dat')
 #print (build_asn_name_map())
 asn_name_map = build_asn_name_map()
+
+start_time = time.time()
+scan_count = 0
 
 if not ASN_SCAN:
 
@@ -280,6 +289,11 @@ if not ASN_SCAN:
     output_results()
     print (DEST, asn_names_list)
     print ()
+
+    current_time = time.time()
+    elapsed = current_time - start_time
+    print (float(elapsed)/1000.0)
+
             
 else: #asn scan
     
@@ -294,6 +308,9 @@ else: #asn scan
     obj = json.loads(data)
 
     for record in obj:
+        if SKIP > 0:
+            SKIP = SKIP - 1
+            continue
         my_net = ipaddress.ip_network(record[1])
         for my_addr in my_net.hosts():
             #print (my_addr)
@@ -306,6 +323,12 @@ else: #asn scan
             [new_router_list, asn_list, asn_names_list] = get_asn_info (router_list)
             output_results()
             print (DEST, asn_names_list)
+            
+            scan_count = scan_count + 1
+            current_time = time.time()
+            elapsed = current_time - start_time
+            print (float(elapsed)/scan_count, 'seconds/scan =', scan_count/float(elapsed)*60, 'scans/minute') 
+
             print ()
             break
         #break
