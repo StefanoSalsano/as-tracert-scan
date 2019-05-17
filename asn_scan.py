@@ -177,7 +177,10 @@ def asn_num_to_name(asn_list):
     output_list=[]
     for asn in asn_list:
         #print (asn[0])
-        output_list.append(asn_name_map[asn[0]])
+        if asn[0] in asn_name_map:
+            output_list.append(asn_name_map[asn[0]])
+        else:
+            output_list.append('NO_NAME_FOR_ASN:'+str(asn[0]))
     return output_list
 
 def is_ipv4_address(input_string):
