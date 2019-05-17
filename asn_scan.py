@@ -176,9 +176,9 @@ def build_asn_name_map():
 
 def retrieve_asn_name(as_number):
     if as_number in asn_name_map:
-        output_list.append(asn_name_map[as_number])
+        return (asn_name_map[as_number])
     else:
-        output_list.append('NO_NAME_FOR_ASN:'+str(as_number))
+        return ('NO_NAME_FOR_ASN:'+str(as_number))
 
 def asn_num_to_name(asn_list):
     output_list=[]
