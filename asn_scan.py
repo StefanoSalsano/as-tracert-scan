@@ -26,7 +26,7 @@ ASN_SCAN = False
 DEST = 'www.uniroma2.it'
 DEST = 'www.baidu.com'
 
-WRITE_TO_FILE = True
+WRITE_TO_FILE = False
 WRITE_FILENAME = 'asn_scan_output.txt'
 
 READFROMFILE = False
@@ -278,7 +278,9 @@ if not ASN_SCAN:
     [new_router_list, asn_list, asn_names_list] = get_asn_info (router_list)
 
     output_results()
-
+    print (DEST, asn_names_list)
+    print ()
+            
 else: #asn scan
     
     if READFROMFILE:
