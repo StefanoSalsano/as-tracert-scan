@@ -38,15 +38,6 @@ FILENAME = 'output.txt'
 ASN_LIST_FILENAME = 'asn_list.out'
 ASN_NAMES_FILENAME = 'name_map.out'
 
-if not WRITE_TO_FILE:
-    global_out_file = sys.stdout
-    global_separator = '\n'
-else:
-    global_out_file = open(WRITE_FILENAME, 'a')
-    global_separator = '\t'
-
-
-
 def run_traceroute(tracedest):
     if OSTYPE == 'lin':
         result = subprocess.run(['traceroute', '-n', tracedest], stdout=subprocess.PIPE)
@@ -264,9 +255,21 @@ if not RUN_IN_JUPYTER:
     SKIP=args.skip
     WRITE_TO_FILE=args.write_to_file
 
+#initialization phase
+
+if not WRITE_TO_FILE:
+    global_out_file = sys.stdout
+    global_separator = '\n'
+else:
+    global_out_file = open(WRITE_FILENAME, 'a')
+    global_separator = '\t'
+
+
 asndb = pyasn.pyasn('ipasn.dat')
 #print (build_asn_name_map())
 asn_name_map = build_asn_name_map()
+
+#scan phase
 
 start_time = time.time()
 scan_count = 0
