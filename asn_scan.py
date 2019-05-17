@@ -30,7 +30,7 @@ DEST = 'www.uniroma2.it'
 DEST = 'www.baidu.com'
 
 WRITE_TO_FILE = False
-WRITE_FILENAME = 'asn_scan_output.txt'
+WRITE_FILENAME = 'output_of_asn_scan.txt'
 
 READFROMFILE = False
 FILENAME = 'output.txt'
