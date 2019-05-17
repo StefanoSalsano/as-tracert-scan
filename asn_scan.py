@@ -174,14 +174,17 @@ def build_asn_name_map():
         map[record[0]]= record[1]
     return map
 
+def retrieve_asn_name(as_number):
+    if as_number in asn_name_map:
+        output_list.append(asn_name_map[as_number])
+    else:
+        output_list.append('NO_NAME_FOR_ASN:'+str(as_number))
+
 def asn_num_to_name(asn_list):
     output_list=[]
     for asn in asn_list:
         #print (asn[0])
-        if asn[0] in asn_name_map:
-            output_list.append(asn_name_map[asn[0]])
-        else:
-            output_list.append('NO_NAME_FOR_ASN:'+str(asn[0]))
+        output_list.append(retrieve_asn_name(asn[0]) )
     return output_list
 
 def is_ipv4_address(input_string):
@@ -212,7 +215,7 @@ def output_results():
         #print (str(my_addr), separator, file = out_file)
         target_asn = asndb.lookup(dest_ip)[0]
         my_out(target_asn)
-        my_out(asn_name_map[target_asn])
+        my_out(retrieve_asn_name(target_asn))
         if (target_asn and asn_list):
             if (target_asn == asn_list[-1][0]):
                 my_out ('REACHED')
