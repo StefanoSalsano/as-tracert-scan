@@ -248,8 +248,9 @@ if not RUN_IN_JUPYTER:
     parser.add_argument('-d', '--dest', dest='destination', default=DEST)
     parser.add_argument('-r', '--readfile', dest='read_from_file', action='store_true', default=READFROMFILE, help='read from file')
     parser.add_argument('-n', '--filename', dest='file_name', default=FILENAME)
-    parser.add_argument('-a', '--asnscan', dest='asn_scan', action='store_true', default=ASN_SCAN)
-    parser.add_argument('-s', '--skip', type=int, dest='skip', default=SKIP)
+    parser.add_argument('-a', '--asnscan', dest='asn_scan', action='store_true', default=ASN_SCAN, help='a trace route is performed towards the AS listed in ASN_LIST_FILENAME')
+    parser.add_argument('-s', '--skip', type=int, dest='skip', default=SKIP, help='in asnscan mode, start from SKIP in the asn list')
+    parser.add_argument('-w', '--writefile', dest='write_to_file', action='store_true', default=WRITE_TO_FILE, help='write (append) to file')
 
 
     args = parser.parse_args()
@@ -261,6 +262,7 @@ if not RUN_IN_JUPYTER:
     FILENAME=args.file_name
     ASN_SCAN=args.asn_scan
     SKIP=args.skip
+    WRITE_TO_FILE=args.write_to_file
 
 asndb = pyasn.pyasn('ipasn.dat')
 #print (build_asn_name_map())
