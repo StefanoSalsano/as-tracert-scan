@@ -9,6 +9,7 @@ import time
 from datetime import datetime
 import sys
 import socket
+import concurrent.futures
 
 # set to True when running in jupyter (avoids command line arguments)
 RUN_IN_JUPYTER = False
@@ -25,6 +26,12 @@ ASN_SCAN = False
 
 # if ASN_SCAN is true, skip a number of initial AS in the list and then start scanning
 SKIP = 0
+
+# number of parallel threads
+PARALLEL = 1
+
+# if ASN_SCAN is true and PARALLEL>1, each thread skips a number of additional initial AS
+DELTA_SKIP = 500
 
 # destination node for traceroute, it can be also changed with option -d
 DEST = 'www.uniroma2.it'
@@ -197,8 +204,8 @@ def is_ipv4_address(input_string):
 def my_out(my_line=''):
     global_out_file.write(str(my_line)+global_separator)
 
-# implicit inputs: DEST, new_router_list, asn_list
-def output_results():
+# implicit inputs: DEST, router_list, new_router_list, asn_list
+def output_results(DEST, router_list, new_router_list, asn_list):
     timestamp = time.time()
     dt_object = datetime.fromtimestamp(timestamp)
     #my_out()
@@ -250,7 +257,7 @@ if not RUN_IN_JUPYTER:
     parser.add_argument('-s', '--skip', type=int, dest='skip', default=SKIP, help='in asnscan mode, start from SKIP in the asn list')
     parser.add_argument('-w', '--writefile', dest='write_to_file', action='store_true', default=WRITE_TO_FILE, help='write (append) to file')
     parser.add_argument('-u', '--userid', dest='scanner_id', default=SCANNER_ID, help='identify the user and the computer which run the scan')
-
+    parser.add_argument('-p', '--parallel', type=int, dest='parallel', default=PARALLEL, help='how many parallel traceroute threads')
 
 
     args = parser.parse_args()
@@ -264,6 +271,49 @@ if not RUN_IN_JUPYTER:
     SKIP=args.skip
     WRITE_TO_FILE=args.write_to_file
     SCANNER_ID=args.scanner_id
+    PARALLEL=args.parallel
+
+def thread_function(name, SKIP):
+
+    print("Thread starting :", name)
+    time.sleep(1)
+
+    scan_count = 0
+    record_num = -1
+
+    for record in obj:
+        record_num = record_num +1
+        if SKIP > 0:
+            SKIP = SKIP - 1
+            continue
+        my_net = ipaddress.ip_network(record[1])
+        for my_addr in my_net.hosts():
+            #print (my_addr)
+            DEST=str(my_addr)
+
+            success=False
+            retries=0
+            while ( not success and retries < 2):
+                retries = retries +1
+
+                trace = run_traceroute(DEST)
+                #print (trace)
+
+                router_list = parse(trace)
+                #print (router_list)
+                [new_router_list, asn_list, asn_names_list] = get_asn_info (router_list)
+                output_results(DEST, router_list, new_router_list, asn_list)
+                print (DEST, asn_names_list)
+                success = (new_router_list != [])
+                
+                scan_count = scan_count + 1
+                current_time = time.time()
+                elapsed = current_time - start_time
+                print ('Thread:', name, 'Scans:', scan_count, 'Record:', record_num, 'seconds/scan:',float(elapsed)/scan_count, 'scans/minute:',  scan_count/float(elapsed)*60) 
+                print ()
+
+            break
+    print(("Thread finishing :", name))
 
 #initialization phase
 
@@ -282,7 +332,6 @@ asn_name_map = build_asn_name_map()
 #scan phase
 
 start_time = time.time()
-scan_count = 0
 
 if not ASN_SCAN:
 
@@ -301,13 +350,13 @@ if not ASN_SCAN:
 
     [new_router_list, asn_list, asn_names_list] = get_asn_info (router_list)
 
-    output_results()
+    output_results(DEST, router_list, new_router_list, asn_list)
     print (DEST, asn_names_list)
     print ()
 
     current_time = time.time()
     elapsed = current_time - start_time
-    print (float(elapsed)/1000.0)
+    print (float(elapsed))
 
             
 else: #asn scan
@@ -322,29 +371,9 @@ else: #asn scan
     # parse file
     obj = json.loads(data)
 
-    for record in obj:
-        if SKIP > 0:
-            SKIP = SKIP - 1
-            continue
-        my_net = ipaddress.ip_network(record[1])
-        for my_addr in my_net.hosts():
-            #print (my_addr)
-            DEST=str(my_addr)
-            trace = run_traceroute(DEST)
-            #print (trace)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=PARALLEL) as executor:
+        #executor.map(thread_function, range(3), SKIP)
+        for index in range(PARALLEL): 
+            executor.submit(thread_function, index, SKIP+index*DELTA_SKIP)
 
-            router_list = parse(trace)
-            #print (router_list)
-            [new_router_list, asn_list, asn_names_list] = get_asn_info (router_list)
-            output_results()
-            print (DEST, asn_names_list)
-            
-            scan_count = scan_count + 1
-            current_time = time.time()
-            elapsed = current_time - start_time
-            print (float(elapsed)/scan_count, 'seconds/scan =', scan_count/float(elapsed)*60, 'scans/minute') 
-
-            print ()
-            break
-        #break
 
